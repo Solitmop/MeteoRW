@@ -1,0 +1,1 @@
+go run main.go -file=D:\Downloads\meteost.csv -api=localhost:8081/api/meteostations/
