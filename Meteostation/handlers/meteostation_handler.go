@@ -38,6 +38,12 @@ func (h *MeteostationHandler) Create(c *gin.Context) {
 
 	// Автоматически генерируем geohash, если его нет, но есть координаты
 	if meteostation.Geohash == "" {
+		if meteostation.Longitude > 180 && meteostation.Longitude < 360 {
+			meteostation.Longitude = meteostation.Longitude - 360
+		}
+		if meteostation.Latitude > 90 && meteostation.Longitude < 180 {
+			meteostation.Longitude = meteostation.Longitude - 180
+		}
 		geohashStr, err := h.GeoService.GetGeohash(meteostation.Latitude, meteostation.Longitude)
 		if err != nil {
 			// Ошибка возможна только при неверных координатах (выход за границы)
