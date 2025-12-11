@@ -1,0 +1,1401 @@
+basePath: /api
+definitions:
+  models.Area:
+    properties:
+      districts:
+        items:
+          $ref: '#/definitions/models.District'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      region:
+        $ref: '#/definitions/models.Region'
+      region_id:
+        type: integer
+    type: object
+  models.AreaCreateRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      region_id:
+        type: integer
+    required:
+    - name
+    - region_id
+    type: object
+  models.AreaUpdateRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      region_id:
+        type: integer
+    type: object
+  models.District:
+    properties:
+      area:
+        $ref: '#/definitions/models.Area'
+      area_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      rail_stations:
+        items:
+          $ref: '#/definitions/models.RailStation'
+        type: array
+    type: object
+  models.DistrictCreateRequest:
+    properties:
+      area_id:
+        type: integer
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - area_id
+    - name
+    type: object
+  models.DistrictUpdateRequest:
+    properties:
+      area_id:
+        type: integer
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+  models.Line:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      rail_stations:
+        items:
+          $ref: '#/definitions/models.RailStation'
+        type: array
+    type: object
+  models.LineCreateRequest:
+    properties:
+      id:
+        maxLength: 20
+        minLength: 1
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - id
+    - name
+    type: object
+  models.LineUpdateRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+  models.RailStation:
+    properties:
+      district:
+        $ref: '#/definitions/models.District'
+      district_id:
+        type: integer
+      hash:
+        type: string
+      id:
+        type: integer
+      lat:
+        type: number
+      line:
+        $ref: '#/definitions/models.Line'
+      line_id:
+        type: string
+      lon:
+        type: number
+      name:
+        type: string
+    type: object
+  models.RailStationCreateRequest:
+    properties:
+      district_id:
+        minimum: 1
+        type: integer
+      lat:
+        type: number
+      line_id:
+        maxLength: 20
+        minLength: 1
+        type: string
+      lon:
+        type: number
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - district_id
+    - lat
+    - line_id
+    - lon
+    - name
+    type: object
+  models.RailStationUpdateRequest:
+    properties:
+      district_id:
+        minimum: 1
+        type: integer
+      lat:
+        type: number
+      line_id:
+        maxLength: 20
+        minLength: 1
+        type: string
+      lon:
+        type: number
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+  models.Region:
+    properties:
+      areas:
+        items:
+          $ref: '#/definitions/models.Area'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.RegionCreateRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  models.RegionUpdateRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API для управления железнодорожными станциями
+  title: Railway Stations API
+  version: "1.0"
+paths:
+  /areas:
+    get:
+      description: Get a list of all areas with pagination and filtering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by region ID
+        in: query
+        name: region_id
+        type: integer
+      - description: Filter by name
+        in: query
+        name: name
+        type: string
+      - default: id
+        description: Sort field
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all areas
+      tags:
+      - areas
+    post:
+      consumes:
+      - application/json
+      description: Create a new area in the database
+      parameters:
+      - description: Area object
+        in: body
+        name: area
+        required: true
+        schema:
+          $ref: '#/definitions/models.AreaCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new area
+      tags:
+      - areas
+  /areas/{id}:
+    delete:
+      description: Delete an area by ID
+      parameters:
+      - description: Area ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete area
+      tags:
+      - areas
+    get:
+      description: Get a single area by its ID
+      parameters:
+      - description: Area ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get area by ID
+      tags:
+      - areas
+    put:
+      consumes:
+      - application/json
+      description: Update an existing area by ID
+      parameters:
+      - description: Area ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Area update object
+        in: body
+        name: area
+        required: true
+        schema:
+          $ref: '#/definitions/models.AreaUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Area'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update area
+      tags:
+      - areas
+  /areas/region/{region_id}:
+    get:
+      description: Get all areas belonging to a specific region
+      parameters:
+      - description: Region ID
+        in: path
+        name: region_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get areas by region
+      tags:
+      - areas
+  /districts:
+    get:
+      description: Get a list of all districts with pagination and filtering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by area ID
+        in: query
+        name: area_id
+        type: integer
+      - description: Filter by region ID
+        in: query
+        name: region_id
+        type: integer
+      - description: Filter by name
+        in: query
+        name: name
+        type: string
+      - default: id
+        description: Sort field
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all districts
+      tags:
+      - districts
+    post:
+      consumes:
+      - application/json
+      description: Create a new district in the database
+      parameters:
+      - description: District object
+        in: body
+        name: district
+        required: true
+        schema:
+          $ref: '#/definitions/models.DistrictCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.District'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new district
+      tags:
+      - districts
+  /districts/{id}:
+    delete:
+      description: Delete a district by ID
+      parameters:
+      - description: District ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete district
+      tags:
+      - districts
+    get:
+      description: Get a single district by its ID
+      parameters:
+      - description: District ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.District'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get district by ID
+      tags:
+      - districts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing district by ID
+      parameters:
+      - description: District ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: District update object
+        in: body
+        name: district
+        required: true
+        schema:
+          $ref: '#/definitions/models.DistrictUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.District'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update district
+      tags:
+      - districts
+  /districts/area/{area_id}:
+    get:
+      description: Get all districts belonging to a specific area
+      parameters:
+      - description: Area ID
+        in: path
+        name: area_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get districts by area
+      tags:
+      - districts
+  /lines:
+    get:
+      description: Get a list of all railway lines with pagination
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by name or ID
+        in: query
+        name: search
+        type: string
+      - default: id
+        description: Sort field
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all lines
+      tags:
+      - lines
+    post:
+      consumes:
+      - application/json
+      description: Create a new railway line in the database
+      parameters:
+      - description: Line object
+        in: body
+        name: line
+        required: true
+        schema:
+          $ref: '#/definitions/models.LineCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Line'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new line
+      tags:
+      - lines
+  /lines/{id}:
+    delete:
+      description: Delete a railway line by ID
+      parameters:
+      - description: Line ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete line
+      tags:
+      - lines
+    get:
+      description: Get a single railway line by its ID
+      parameters:
+      - description: Line ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Line'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get line by ID
+      tags:
+      - lines
+    put:
+      consumes:
+      - application/json
+      description: Update an existing railway line by ID
+      parameters:
+      - description: Line ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Line update object
+        in: body
+        name: line
+        required: true
+        schema:
+          $ref: '#/definitions/models.LineUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Line'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update line
+      tags:
+      - lines
+  /regions:
+    get:
+      description: Get a list of all regions with pagination and filtering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by name
+        in: query
+        name: name
+        type: string
+      - default: id
+        description: Sort field
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all regions
+      tags:
+      - regions
+    post:
+      consumes:
+      - application/json
+      description: Create a new region in the database
+      parameters:
+      - description: Region object
+        in: body
+        name: region
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegionCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Region'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new region
+      tags:
+      - regions
+  /regions/{id}:
+    delete:
+      description: Delete a region by ID
+      parameters:
+      - description: Region ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete region
+      tags:
+      - regions
+    get:
+      description: Get a single region by its ID
+      parameters:
+      - description: Region ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Region'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get region by ID
+      tags:
+      - regions
+    put:
+      consumes:
+      - application/json
+      description: Update an existing region by ID
+      parameters:
+      - description: Region ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Region update object
+        in: body
+        name: region
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Region'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update region
+      tags:
+      - regions
+  /stations:
+    get:
+      description: Get a list of all railway stations with pagination and filtering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by district ID
+        in: query
+        name: district_id
+        type: integer
+      - description: Filter by line ID
+        in: query
+        name: line_id
+        type: string
+      - description: Filter by station name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all railway stations
+      tags:
+      - stations
+    post:
+      consumes:
+      - application/json
+      description: Create a new railway station with automatic geohash generation
+      parameters:
+      - description: Railway station object
+        in: body
+        name: station
+        required: true
+        schema:
+          $ref: '#/definitions/models.RailStationCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.RailStation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new railway station
+      tags:
+      - stations
+  /stations/{id}:
+    delete:
+      description: Delete a railway station by ID
+      parameters:
+      - description: Station ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete railway station
+      tags:
+      - stations
+    get:
+      description: Get a single railway station by its ID
+      parameters:
+      - description: Station ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RailStation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get railway station by ID
+      tags:
+      - stations
+    put:
+      consumes:
+      - application/json
+      description: Update an existing railway station by ID
+      parameters:
+      - description: Station ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Station update object
+        in: body
+        name: station
+        required: true
+        schema:
+          $ref: '#/definitions/models.RailStationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RailStation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update railway station
+      tags:
+      - stations
+  /stations/geohash/{hash}:
+    get:
+      description: Search railway stations by geohash with optional neighbor inclusion
+      parameters:
+      - description: Geohash string
+        in: path
+        name: hash
+        required: true
+        type: string
+      - default: false
+        description: Include neighboring geohashes
+        in: query
+        name: neighbors
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search stations by geohash
+      tags:
+      - stations
+  /stations/radius:
+    get:
+      description: Search railway stations within a radius from a given point
+      parameters:
+      - description: Latitude of the center point
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude of the center point
+        in: query
+        name: lon
+        required: true
+        type: number
+      - default: 1
+        description: Search radius in kilometers
+        in: query
+        name: radius
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search stations by radius
+      tags:
+      - stations
+swagger: "2.0"
