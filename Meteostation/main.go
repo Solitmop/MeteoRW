@@ -59,6 +59,7 @@ func main() {
 		api.GET("/meteostations/:index", meteoHandler.Get)
 		api.PUT("/meteostations/:index", meteoHandler.Update)
 		api.DELETE("/meteostations/:index", meteoHandler.Delete)
+		api.GET("/geohash/:geohash", meteoHandler.SearchByGeoHash)
 	}
 
 	router.Run(":8081") // listen and serve on localhost:8081

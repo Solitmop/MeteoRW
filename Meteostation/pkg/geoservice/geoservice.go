@@ -32,6 +32,11 @@ func (c *GeoHashClient) GetGeohash(lat, lon float64) (string, error) {
 	return geohash.Encode(lat, lon, c.Precision)
 }
 
+// GenerateNeighbors вычисляет соседние геохеши
+func (s *GeoHashClient) GenerateNeighbors(hash string) ([]string, error) {
+    return geohash.Neighbors(hash)
+}
+
 var PrecisionMapNames = map[string]geohash.Precision{
 	"house":    geohash.House,
 	"block":    geohash.Block,

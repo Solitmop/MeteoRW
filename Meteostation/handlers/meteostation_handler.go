@@ -17,7 +17,7 @@ type MeteostationHandler struct {
 	GeoService *geoservice.GeoHashClient
 }
 
-// CreateMeteostation создает новый продукт
+// CreateMeteostation создает новую станцию
 // @Summary Create a new meteostation
 // @Description Create a new meteostation in the database
 // @Tags meteostations
@@ -74,7 +74,7 @@ func (h *MeteostationHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, meteostation)
 }
 
-// GetMeteostations возвращает все продукты
+// GetMeteostations возвращает все станции
 // @Summary Get all meteostations
 // @Description Get a list of all meteostations
 // @Tags meteostations
@@ -93,8 +93,8 @@ func (h *MeteostationHandler) Index(c *gin.Context) {
 	c.JSON(http.StatusOK, meteostations)
 }
 
-// getMeteostationByIndex внутренний метод для получения продукта по Index
-// Возвращает продукт и флаг существования (без отправки HTTP ответа)
+// getMeteostationByIndex внутренний метод для получения станции по Index
+// Возвращает станцию и флаг существования (без отправки HTTP ответа)
 func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, error) {
 	index := c.Param("index")
 	// TODO: Add validation
@@ -104,7 +104,7 @@ func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, 
 	return &meteostation, result.Error
 }
 
-// GetMeteostation возвращает продукт по Index
+// GetMeteostation возвращает станцию по Index
 // @Summary Get meteostation by Index
 // @Description Get a single meteostation by its Index
 // @Tags meteostations
@@ -137,7 +137,7 @@ func (h *MeteostationHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, meteostation)
 }
 
-// UpdateMeteostation обновляет продукт по Index
+// UpdateMeteostation обновляет станцию по Index
 // @Summary Update meteostation
 // @Description Update an existing meteostation by Index
 // @Tags meteostations
@@ -183,7 +183,7 @@ func (h *MeteostationHandler) Update(c *gin.Context) {
 
 }
 
-// DeleteMeteostation удаляет продукт по Index
+// DeleteMeteostation удаляет станцию по Index
 // @Summary Delete meteostation
 // @Description Delete a meteostation by Index
 // @Tags meteostations
@@ -215,4 +215,70 @@ func (h *MeteostationHandler) Delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, index)
+}
+
+// SearchByGeoHash ищет станции по geohash и соседним хешам
+// @Summary Search stations by geohash
+// @Description Search railway stations by geohash with optional neighbor inclusion
+// @Tags stations
+// @Produce json
+// @Param geohash path string true "Geohash string"
+// @Param neighbors query boolean false "Include neighboring geohashes" default(false)
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /stations/geohash/{geohash} [get]
+func (h *MeteostationHandler) SearchByGeoHash(c *gin.Context) {
+	limit := 100
+	geohash := c.Param("geohash")
+	includeNeighbors := c.DefaultQuery("neighbors", "false") == "true"
+
+	var hashesToSearch []string
+	hashesToSearch = append(hashesToSearch, geohash)
+
+	// Добавляем соседние хеши если нужно
+	if includeNeighbors {
+		neighbors, err := h.GeoService.GenerateNeighbors(geohash)
+		if err == nil {
+			hashesToSearch = append(hashesToSearch, neighbors...)
+		}
+	}
+
+	var stations []models.Meteostation
+
+	// Создаем условия для поиска по префиксам
+    var conditions []string
+    var args []interface{}
+	for _, searchHash := range hashesToSearch {
+        conditions = append(conditions, "geohash LIKE ?")
+        args = append(args, searchHash+"%")
+    }
+    
+    // Собираем SQL запрос
+    query := h.DB
+    
+    if len(conditions) > 0 {
+        // Используем OR для всех префиксов
+        query = query.Where(strings.Join(conditions, " OR "), args...)
+    } else {
+        // Поиск только по основному префиксу
+        query = query.Where("geohash LIKE ?", geohash+"%")
+    }
+	
+	// Выполняем запрос с лимитом
+    result := query.Limit(limit).Find(&stations)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Database error",
+			"details": result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"geohash":  geohash,
+		"stations": stations,
+		"count":    len(stations),
+	})
 }
