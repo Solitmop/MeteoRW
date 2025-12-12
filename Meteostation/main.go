@@ -10,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -37,6 +39,11 @@ func initGeoService() *geoservice.GeoHashClient {
 	return gs
 }
 
+// @title Meteostation API
+// @version 1.0
+// @description API для управления метеостанциями
+// @host localhost:8081
+// @BasePath /api
 func main() {
 	db := initDB()
 
@@ -64,6 +71,8 @@ func main() {
 		}
 		api.GET("/geohash/:geohash", meteoHandler.SearchByGeoHash)
 	}
+	// Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.Run(":8081") // listen and serve on localhost:8081
 }

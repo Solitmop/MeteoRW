@@ -1,0 +1,232 @@
+basePath: /api
+definitions:
+  models.Meteostation:
+    properties:
+      altitude:
+        description: высота над уровнем моря
+        type: integer
+      geohash:
+        type: string
+      index:
+        type: integer
+      latitude:
+        description: широта
+        type: number
+      longitude:
+        description: долгота
+        type: number
+      name:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: API для управления метеостанциями
+  title: Meteostation API
+  version: "1.0"
+paths:
+  /meteostations:
+    get:
+      description: Get a list of all meteostations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Meteostation'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all meteostations
+      tags:
+      - meteostations
+    post:
+      consumes:
+      - application/json
+      description: Create a new meteostation in the database
+      parameters:
+      - description: Meteostation object
+        in: body
+        name: meteostation
+        required: true
+        schema:
+          $ref: '#/definitions/models.Meteostation'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Meteostation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new meteostation
+      tags:
+      - meteostations
+  /meteostations/{index}:
+    delete:
+      description: Delete a meteostation by Index
+      parameters:
+      - description: Meteostation Index
+        in: path
+        name: index
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete meteostation
+      tags:
+      - meteostations
+    get:
+      description: Get a single meteostation by its Index
+      parameters:
+      - description: Meteostation Index
+        in: path
+        name: index
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Meteostation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get meteostation by Index
+      tags:
+      - meteostations
+    put:
+      consumes:
+      - application/json
+      description: Update an existing meteostation by Index
+      parameters:
+      - description: Meteostation Index
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Meteostation object
+        in: body
+        name: meteostation
+        required: true
+        schema:
+          $ref: '#/definitions/models.Meteostation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Meteostation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update meteostation
+      tags:
+      - meteostations
+  /stations/geohash/{geohash}:
+    get:
+      description: Search railway stations by geohash with optional neighbor inclusion
+      parameters:
+      - description: Geohash string
+        in: path
+        name: geohash
+        required: true
+        type: string
+      - default: false
+        description: Include neighboring geohashes
+        in: query
+        name: neighbors
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search stations by geohash
+      tags:
+      - stations
+swagger: "2.0"
