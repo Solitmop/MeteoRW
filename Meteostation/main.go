@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "Meteostation/docs"
 	"Meteostation/handlers"
 	"Meteostation/models"
 	"Meteostation/pkg/geoservice"
@@ -72,7 +73,8 @@ func main() {
 		api.GET("/geohash/:geohash", meteoHandler.SearchByGeoHash)
 	}
 	// Swagger UI
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.URL("/swagger/doc.json")))
 
 	router.Run(":8081") // listen and serve on localhost:8081
 }
