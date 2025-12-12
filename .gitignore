@@ -1,0 +1,12 @@
+.vscode/
+.idea/
+*.swp
+*.swo
+.env
+.env.local
+*.log
+logs/
+dist/
+build/
+*.exe
+*.dll
