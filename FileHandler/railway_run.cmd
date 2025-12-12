@@ -1,0 +1,1 @@
+go run main.go -file=D:\Downloads\railst.csv -api=localhost:8082/api/railwaystations/
