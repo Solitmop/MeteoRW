@@ -3,6 +3,7 @@ package handlers
 import (
 	"Meteostation/models"
 	"Meteostation/pkg/geoservice"
+	"Meteostation/validators"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,6 +33,12 @@ func (h *MeteostationHandler) Create(c *gin.Context) {
 	var meteostation models.Meteostation
 	// TODO: Add validation
 	if err := c.ShouldBindJSON(&meteostation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Валидация
+	if err := validators.Validate(meteostation); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -96,7 +103,6 @@ func (h *MeteostationHandler) Index(c *gin.Context) {
 // getMeteostationByIndex внутренний метод для получения станции по Index
 // Возвращает станцию и флаг существования (без отправки HTTP ответа)
 func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, error) {
-	// TODO: Add validation
 	index := c.Param("index")
 
 	var meteostation models.Meteostation
@@ -116,7 +122,6 @@ func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, 
 // @Failure 500 {object} map[string]string
 // @Router /meteostations/{index} [get]
 func (h *MeteostationHandler) Get(c *gin.Context) {
-	// TODO: Add validation
 	meteostation, err := h.getByIndex(c)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -152,12 +157,17 @@ func (h *MeteostationHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// TODO: Add validation
 
 	if err := c.ShouldBindJSON(&meteostation); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if err := validators.Validate(meteostation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	result := h.DB.Save(&meteostation)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
