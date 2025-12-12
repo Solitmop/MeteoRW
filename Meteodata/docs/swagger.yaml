@@ -1,0 +1,880 @@
+basePath: /api
+definitions:
+  models.LED:
+    properties:
+      date:
+        type: string
+      diameter:
+        type: integer
+      duration:
+        type: integer
+      index:
+        type: integer
+      indication:
+        type: integer
+      thickness:
+        type: integer
+      time:
+        type: integer
+    type: object
+  models.LEDRequest:
+    properties:
+      date:
+        description: Unix timestamp
+        minimum: 0
+        type: integer
+      diameter:
+        maximum: 100
+        minimum: 0
+        type: integer
+      duration:
+        maximum: 1440
+        minimum: 0
+        type: integer
+      index:
+        minimum: 1
+        type: integer
+      indication:
+        maximum: 1000
+        minimum: 0
+        type: integer
+      thickness:
+        maximum: 100
+        minimum: 0
+        type: integer
+      time:
+        maximum: 1440
+        minimum: 0
+        type: integer
+    required:
+    - date
+    - index
+    type: object
+  models.Regular:
+    properties:
+      before_code:
+        type: integer
+      date:
+        type: string
+      during_code:
+        type: integer
+      index:
+        type: integer
+      rainfall:
+        type: number
+      t_dry:
+        type: number
+      t_max:
+        type: number
+      t_min:
+        type: number
+      t_wet:
+        type: number
+      visibility:
+        type: integer
+      wind_avg:
+        type: integer
+      wind_max:
+        type: integer
+    type: object
+  models.RegularRequest:
+    properties:
+      before_code:
+        maximum: 99
+        minimum: 0
+        type: integer
+      date:
+        description: Unix timestamp
+        minimum: 0
+        type: integer
+      during_code:
+        maximum: 99
+        minimum: 0
+        type: integer
+      index:
+        minimum: 1
+        type: integer
+      rainfall:
+        maximum: 1000
+        minimum: 0
+        type: number
+      t_dry:
+        maximum: 100
+        minimum: -100
+        type: number
+      t_max:
+        maximum: 100
+        minimum: -100
+        type: number
+      t_min:
+        maximum: 100
+        minimum: -100
+        type: number
+      t_wet:
+        maximum: 100
+        minimum: -100
+        type: number
+      visibility:
+        maximum: 100
+        minimum: 0
+        type: integer
+      wind_avg:
+        maximum: 100
+        minimum: 0
+        type: integer
+      wind_max:
+        maximum: 150
+        minimum: 0
+        type: integer
+    required:
+    - date
+    - index
+    type: object
+  models.SNOW:
+    properties:
+      date:
+        type: string
+      grade:
+        type: integer
+      height:
+        type: number
+      index:
+        type: integer
+    type: object
+  models.SNOWRequest:
+    properties:
+      date:
+        description: Unix timestamp
+        minimum: 0
+        type: integer
+      grade:
+        maximum: 10
+        minimum: 0
+        type: integer
+      height:
+        maximum: 1000
+        minimum: 0
+        type: number
+      index:
+        minimum: 1
+        type: integer
+    required:
+    - date
+    - index
+    type: object
+  models.TTTR:
+    properties:
+      date:
+        type: string
+      index:
+        type: integer
+      quality:
+        type: integer
+      rainfall:
+        type: number
+      t_avg:
+        type: number
+      t_max:
+        type: number
+      t_min:
+        type: number
+    type: object
+  models.TTTRRequest:
+    properties:
+      date:
+        description: Unix timestamp
+        minimum: 0
+        type: integer
+      index:
+        minimum: 1
+        type: integer
+      quality:
+        maximum: 10
+        minimum: 0
+        type: integer
+      rainfall:
+        maximum: 1000
+        minimum: 0
+        type: number
+      t_avg:
+        maximum: 100
+        minimum: -100
+        type: number
+      t_max:
+        maximum: 100
+        minimum: -100
+        type: number
+      t_min:
+        maximum: 100
+        minimum: -100
+        type: number
+    required:
+    - date
+    - index
+    type: object
+host: localhost:8083
+info:
+  contact: {}
+  description: API для управления метеорологическими измерениями
+  title: Метеорологический API
+  version: "1.0"
+paths:
+  /led:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список LED измерений с фильтрацией
+      parameters:
+      - description: Индекс станции
+        in: query
+        name: index
+        type: string
+      - description: Дата начала (Unix timestamp)
+        in: query
+        name: date_from
+        type: integer
+      - description: Дата окончания (Unix timestamp)
+        in: query
+        name: date_to
+        type: integer
+      - default: 100
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить LED измерения
+      tags:
+      - led
+    post:
+      consumes:
+      - application/json
+      description: Создает новое LED измерение
+      parameters:
+      - description: Данные измерения
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.LEDRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.LED'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать LED измерение
+      tags:
+      - led
+  /led/{index}/{date}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет LED измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить LED измерение
+      tags:
+      - led
+    get:
+      consumes:
+      - application/json
+      description: Возвращает LED измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LED'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить конкретное LED измерение
+      tags:
+      - led
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующее LED измерение
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      - description: Обновленные данные
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.LEDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LED'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить LED измерение
+      tags:
+      - led
+  /regular:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список регулярных измерений с фильтрацией
+      parameters:
+      - description: Индекс станции
+        in: query
+        name: index
+        type: string
+      - description: Дата начала (Unix timestamp)
+        in: query
+        name: date_from
+        type: integer
+      - description: Дата окончания (Unix timestamp)
+        in: query
+        name: date_to
+        type: integer
+      - default: 100
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить регулярные измерения
+      tags:
+      - regular
+    post:
+      consumes:
+      - application/json
+      description: Создает новое регулярное метеорологическое измерение
+      parameters:
+      - description: Данные измерения
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegularRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Regular'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать регулярное измерение
+      tags:
+      - regular
+  /regular/{index}/{date}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет регулярное измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить регулярное измерение
+      tags:
+      - regular
+    get:
+      consumes:
+      - application/json
+      description: Возвращает регулярное измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Regular'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить конкретное регулярное измерение
+      tags:
+      - regular
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующее регулярное измерение
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      - description: Обновленные данные
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegularRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Regular'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить регулярное измерение
+      tags:
+      - regular
+  /snow:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список SNOW измерений с фильтрацией
+      parameters:
+      - description: Индекс станции
+        in: query
+        name: index
+        type: string
+      - description: Дата начала (Unix timestamp)
+        in: query
+        name: date_from
+        type: integer
+      - description: Дата окончания (Unix timestamp)
+        in: query
+        name: date_to
+        type: integer
+      - default: 100
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить SNOW измерения
+      tags:
+      - snow
+    post:
+      consumes:
+      - application/json
+      description: Создает новое SNOW измерение
+      parameters:
+      - description: Данные измерения
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.SNOWRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.SNOW'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать SNOW измерение
+      tags:
+      - snow
+  /snow/{index}/{date}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет SNOW измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить SNOW измерение
+      tags:
+      - snow
+    get:
+      consumes:
+      - application/json
+      description: Возвращает SNOW измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SNOW'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить конкретное SNOW измерение
+      tags:
+      - snow
+  /statistics:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику по всем типам измерений
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Статистика по измерениям
+      tags:
+      - statistics
+  /tttr:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список TTTR измерений с фильтрацией
+      parameters:
+      - description: Индекс станции
+        in: query
+        name: index
+        type: string
+      - description: Дата начала (Unix timestamp)
+        in: query
+        name: date_from
+        type: integer
+      - description: Дата окончания (Unix timestamp)
+        in: query
+        name: date_to
+        type: integer
+      - default: 100
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить TTTR измерения
+      tags:
+      - tttr
+    post:
+      consumes:
+      - application/json
+      description: Создает новое TTTR измерение
+      parameters:
+      - description: Данные измерения
+        in: body
+        name: measurement
+        required: true
+        schema:
+          $ref: '#/definitions/models.TTTRRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.TTTR'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать TTTR измерение
+      tags:
+      - tttr
+  /tttr/{index}/{date}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет TTTR измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить TTTR измерение
+      tags:
+      - tttr
+    get:
+      consumes:
+      - application/json
+      description: Возвращает TTTR измерение по индексу и дате
+      parameters:
+      - description: Индекс станции
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Дата измерения (Unix timestamp)
+        in: path
+        name: date
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TTTR'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить конкретное TTTR измерение
+      tags:
+      - tttr
+swagger: "2.0"

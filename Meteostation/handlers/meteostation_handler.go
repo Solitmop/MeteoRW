@@ -96,8 +96,8 @@ func (h *MeteostationHandler) Index(c *gin.Context) {
 // getMeteostationByIndex внутренний метод для получения станции по Index
 // Возвращает станцию и флаг существования (без отправки HTTP ответа)
 func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, error) {
-	index := c.Param("index")
 	// TODO: Add validation
+	index := c.Param("index")
 
 	var meteostation models.Meteostation
 	result := h.DB.First(&meteostation, index)
@@ -116,15 +116,7 @@ func (h *MeteostationHandler) getByIndex(c *gin.Context) (*models.Meteostation, 
 // @Failure 500 {object} map[string]string
 // @Router /meteostations/{index} [get]
 func (h *MeteostationHandler) Get(c *gin.Context) {
-	//index := c.Param("index")
 	// TODO: Add validation
-	/*
-		    if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid meteostation Index"})
-				return
-			}
-	*/
-
 	meteostation, err := h.getByIndex(c)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -166,13 +158,6 @@ func (h *MeteostationHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	/*index, err := strconv.ParseUint(c.Param("index"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid meteostation Index"})
-		return
-	}
-	updatedMeteostation.Index = uint(index)
-	*/
 	result := h.DB.Save(&meteostation)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})

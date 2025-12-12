@@ -54,11 +54,14 @@ func main() {
 	router := gin.Default()
 	api := router.Group("/api")
 	{
-		api.POST("/meteostations", meteoHandler.Create)
-		api.GET("/meteostations", meteoHandler.Index)
-		api.GET("/meteostations/:index", meteoHandler.Get)
-		api.PUT("/meteostations/:index", meteoHandler.Update)
-		api.DELETE("/meteostations/:index", meteoHandler.Delete)
+		meteostations := api.Group("/meteostations")
+		{
+			meteostations.POST("", meteoHandler.Create)
+			meteostations.GET("", meteoHandler.Index)
+			meteostations.GET("/:index", meteoHandler.Get)
+			meteostations.PUT("/:index", meteoHandler.Update)
+			meteostations.DELETE("/:index", meteoHandler.Delete)
+		}
 		api.GET("/geohash/:geohash", meteoHandler.SearchByGeoHash)
 	}
 
