@@ -9,7 +9,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"railwaystation/internal/routes"
+	"visualizationservice/internal/routes"
 )
 
 func main() {
@@ -43,6 +43,6 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on port %s", port)
+	log.Printf("Visualization Service starting on port %s", port)
 	router.Run(":" + port)
 }
