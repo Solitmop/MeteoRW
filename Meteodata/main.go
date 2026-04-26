@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	//"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -65,7 +65,7 @@ func main() {
 
 func initDB() *gorm.DB {
 	// Load environment variables
-	godotenv.Load()
+	//godotenv.Load()
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
 		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
