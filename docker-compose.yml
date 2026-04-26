@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  postgres-meteostation:
+    image: postgis/postgis:15-3.4
+    container_name: postgres-meteostation
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_METEOSTATION}
+    volumes:
+      - meteostation-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - meteostation-network
+
+  postgres-metedata:
+    image: timescale/timescaledb:2.13.2-pg15
+    container_name: postgres-metedata
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_METEDATA}
+    volumes:
+      - metedata-db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - meteostation-network
+
+  postgres-railway:
+    image: postgis/postgis:15-3.4
+    container_name: postgres-railway
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_RAILWAY}
+    volumes:
+      - railway-db-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - meteostation-network
+
+  postgres-visualization:
+    image: postgis/postgis:15-3.4
+    container_name: postgres-visualization
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_VISUALIZATION}
+    volumes:
+      - visualization-db-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - meteostation-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: api-gateway
+    depends_on:
+      - meteostation
+      - metedata
+      - railwaystation
+      - visualizationservice
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - meteostation-network
+
+  meteostation:
+    build: ./Meteostation
+    container_name: meteostation-service
+    depends_on:
+      - postgres-meteostation
+    environment:
+      - DB_HOST=postgres-meteostation
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME_METEOSTATION}
+      - GEOHASH_PRECISION=${GEOHASH_PRECISION}
+    ports:
+      - "8081:8081"
+    networks:
+      - meteostation-network
+
+  metedata:
+    build: ./Meteodata
+    container_name: metedata-service
+    depends_on:
+      - postgres-metedata
+    environment:
+      - DB_HOST=postgres-metedata
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME_METEDATA}
+    ports:
+      - "8083:8083"
+    networks:
+      - meteostation-network
+
+  railwaystation:
+    build: ./RailWayStation
+    container_name: railwaystation-service
+    depends_on:
+      - postgres-railway
+    environment:
+      - DB_HOST=postgres-railway
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME_RAILWAY}
+    ports:
+      - "8082:8082"
+    networks:
+      - meteostation-network
+
+  visualizationservice:
+    build: ./VisualizationService
+    container_name: visualizationservice
+    depends_on:
+      - postgres-visualization
+    environment:
+      - DB_HOST=postgres-visualization
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME_VISUALIZATION}
+      - PORT=8080
+    ports:
+      - "8084:8080"
+    networks:
+      - meteostation-network
+
+  filehandler:
+    build: ./FileHandler
+    container_name: filehandler-service
+    depends_on:
+      - meteostation
+    environment:
+      - API_URL=http://meteostation-service:8081/api/meteostations
+    ports:
+      - "8080:8080"
+    networks:
+      - meteostation-network
+
+volumes:
+  meteostation-db-data:
+  metedata-db-data:
+  railway-db-data:
+  visualization-db-data:
+
+networks:
+  meteostation-network:
+    driver: bridge

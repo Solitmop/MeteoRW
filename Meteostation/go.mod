@@ -12,6 +12,8 @@ require (
 	github.com/swaggo/swag v1.16.6
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
+	github.com/twpayne/go-geom v1.6.1
+	github.com/twpayne/go-geom/encoding/wkb v1.6.1
 )
 
 require (
